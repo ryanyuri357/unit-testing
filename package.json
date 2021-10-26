@@ -12,7 +12,7 @@
     "jest": "^27.3.1"
   },
   "scripts": {
-    "test": "jest --watchAll"
+    "test": "jest"
   },
   "jest": {
     "verbose": true,
