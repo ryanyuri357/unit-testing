@@ -1,4 +1,6 @@
 const lib = require("../lib");
+const db = require("../db");
+const mail = require("../mail");
 
 // number test
 describe("absolute", () => {
@@ -63,7 +65,7 @@ describe("getProduct", () => {
   });
 });
 
-// testing exceptions
+// exception test
 describe("registerUser", () => {
   it("should throw exception if username is falsey", () => {
     const args = [null, undefined, NaN, "", 0, false];
@@ -78,5 +80,47 @@ describe("registerUser", () => {
     const result = lib.registerUser("Ryan");
     expect(result).toMatchObject({ username: "Ryan" });
     expect(result.id).toBeGreaterThan(0);
+  });
+});
+
+describe("appleDiscount", () => {
+  it("should apply 10% discount if customer points are > 10", () => {
+    db.getCustomerSync = function (customerId) {
+      console.log("Mock read of customer...");
+      return { id: customerId, points: 20 };
+    };
+
+    const order = { customerId: 1, totalPrice: 10 };
+    lib.applyDiscount(order);
+    expect(order.totalPrice).toBe(9);
+  });
+});
+
+describe("notifyCustomer", () => {
+  it("should send an email to the customer", () => {
+    db.getCustomerSync = jest.fn().mockReturnValue({ email: "abc@d.com" });
+    mail.send = jest.fn();
+
+    lib.notifyCustomer({ customerId: 1 });
+
+    expect(mail.send).toHaveBeenCalled();
+    expect(mail.send.mock.calls[0][0]).toBe("abc@d.com");
+    expect(mail.send.mock.calls[0][1]).toMatch(/order/);
+
+    // Using Jest mock functions:
+    // const mockFunction = jest.fn();
+    // mockFunction.mockReturnValue(1);
+    // mockFunction.mockResolvedValue(1);
+    // mockFunction.mockRejectedValue(new Error("Error message..."));
+    // const result = await mockFunction();
+
+    // db.getCustomerSync = function (customerId) {
+    //   return { email: "abc@d.com" };
+    // };
+
+    // let mailSent = false;
+    // mail.send = function (email, message) {
+    //   mailSent = true;
+    // };
   });
 });
